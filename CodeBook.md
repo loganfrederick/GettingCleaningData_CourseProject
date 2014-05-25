@@ -8,7 +8,9 @@
 * y_test: A data table with the content of Y_test.txt
 * subject_train: A table with the content from subject_train.txt
 * subject_test: A table with the content from subject_test.txt
-* activity_lables: 
+* activity_lables: A table with the labels from the activity document.
+* features: A table iwth the labels from the features document.
+* data: The name given to the combined train and test data sets.
 
 ##The Data
 
