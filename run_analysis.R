@@ -1,50 +1,33 @@
+setwd("/Users/loganfrederick/Projects/Coursera Johns Hopkins Data Science/Getting and Cleaning Data/course_project/")
 
-setwd("/Users/loganfrederick/Projects/Coursera Johns Hopkins Data Science/Getting and Cleaning Data/course_project")
+x_train <- read.table("UCI HAR Dataset/train/X_train.txt")
+x_test <- read.table("UCI HAR Dataset/test/X_test.txt")
+x <- rbind(x_train, x_test)
 
-x_train<-read.table("UCI HAR Dataset/train/X_train.txt")
-y_train<-read.table("UCI HAR Dataset/train/y_train.txt")
+features <- read.table("UCI HAR Dataset/features.txt")
+names(x) <- features[,2]
 
-x_test<-read.table("UCI HAR Dataset/test/X_test.txt")
-y_test<-read.table("UCI HAR Dataset/test/y_test.txt")
+extracted_x <- x[, grepl("mean\\(\\)", names(x)) | grepl("std\\(\\)", names(x))]
 
-subject_train<-read.table("UCI HAR Dataset/train/subject_train.txt")
-subject_test<-read.table("UCI HAR Dataset/test/subject_test.txt")
+subject_train <- read.table("UCI HAR Dataset/train/subject_train.txt")
+subject_test <- read.table("UCI HAR Dataset/test/subject_test.txt")
+subject <- rbind(subject_train, subject_test)
 
-activity_lables<-read.table("UCI HAR Dataset/activity_labels.txt")
-features<-read.table("UCI HAR Dataset/features.txt")
+y_train <- read.table("UCI HAR Dataset/train/y_train.txt")
+y_test <- read.table("UCI HAR Dataset/test/y_test.txt")
+y <- rbind(y_train, y_test)
 
-features  <- as.character(read.table("UCI HAR Dataset/features.txt")[,2])
-activities <- read.table("UCI HAR Dataset/activity_labels.txt")
-colnames(activities) <- c("activity", "activity_label")
-colnames(subject_test) <- c("subject")
+activity_labels <- read.table("UCI HAR Dataset/activity_labels.txt")
+activity_names <- activity_labels$V2[match(y$V1, activity_labels$V1)]
 
-colnames(x_test) <- features
-#colnames(y_test) <- features
-colnames(x_train) <- features
-#colnames(y_train) <- features
+extracted_x <- cbind("subject"=subject$V1, "activityName"=activity_names, extracted_x)
 
-#merged_train <- merge(x_train,y_train,all=TRUE)
-#merged_x <- rbind(x_train,x_test)
-#merged_y <- rbind(y_train,y_test)
+# Remove non-alphanumeric characters in the variable names
+# Found :alnum from forums/googling
+names(extracted_x) <- gsub(pattern="[^[:alnum:]]",replacement="", names(extracted_x))
 
-#Merge Test Data
-merged_test <- merge(y_test, activities, all.x=TRUE)
-x_test <- cbind(subject_test,merged_test,x_test)
-
-#Merge train data
-merged_train <- merge(y_train, activities, all.x=TRUE)
-x_train <- cbind(subject_train,merged_train,x_train)
-colnames(x_train)[1] <- "subject"
-
-
-#Merge two data sets
-data <- rbind(x_test,x_train)
-
-#Get stats
-methods <- c("mean()","std()")
-#matches <- unique(grep(paste(methods,collapse="|"), features, value=TRUE))
-
-#data_table <- data[,c("subject","activity_labels",matches)]
-
-write.table(data, "run_analysis_data.txt", row.names = FALSE)
+library(reshape2)
+melt_data <- melt(extracted_x, id=c("subject", "activityName"))
+tidy_data <- dcast(melt_data, subject + activity_names ~ variable, mean)
+write.csv(tidy_data, file="tidy.txt", row.names=FALSE)
 
